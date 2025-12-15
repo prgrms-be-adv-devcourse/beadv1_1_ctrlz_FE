@@ -9,6 +9,7 @@ import Footer from "@/components/footer";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import RecentlyViewedProducts from "@/components/products/recentlyViewedProducts";
+import { Suspense } from "react";
 
 config.autoAddCss = false;
 
@@ -34,12 +35,16 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${pretendard.variable} flex min-h-screen flex-col font-pretendard`}>
         <Providers>
-          <Header />
+        <Suspense fallback={null}>
+          <Header />   {/* useSearchParams 사용 */}
+        </Suspense>
           <main className="grow pt-24">
             {children}
           </main>
           <RecentlyViewedProducts/>
-          <Footer />
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
         </Providers>
       </body>
     </html>
