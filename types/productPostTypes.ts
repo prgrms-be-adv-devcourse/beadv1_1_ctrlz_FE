@@ -1,4 +1,10 @@
+import { productPostFormSchema } from "@/lib/formSchema";
 import { TApiResponse, TPageResponse } from "./base";
+import z from "zod";
+
+
+//form 입력 데이터 형식
+export type ProductPostFormSchema = z.infer<typeof productPostFormSchema>
 
 //상세
 export type TProductPost = {
@@ -40,3 +46,6 @@ export type TProductSummaryResponse = TApiResponse<TProductSummaryItem[]>
 
 
 export type TProductPageSummaryItem = TPageResponse<TProductSummaryItem[]>;
+
+
+ 

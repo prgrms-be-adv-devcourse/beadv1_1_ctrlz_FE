@@ -10,6 +10,7 @@ import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import RecentlyViewedProducts from "@/components/products/recentlyViewedProducts";
 import { Suspense } from "react";
+import Script from "next/script";
 
 config.autoAddCss = false;
 
@@ -45,6 +46,10 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <Footer />
           </Suspense>
+          <Script
+            src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+            strategy="beforeInteractive"
+          />
         </Providers>
       </body>
     </html>

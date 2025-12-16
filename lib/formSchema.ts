@@ -92,13 +92,49 @@ export const userInfoFormSchema = z.object({
     .string()
     .min(1, { message: "닉네임을 입력하세요." }),
 
-  oauthId: z.string(),
+  oauthId: z.enum(["google"]),
 
-  gender: z.enum(["남", "여"], {
+  gender: z.enum(["male", "female"], {
     message: "성별을 선택하세요.",
   }),
 
   age: z
     .number()
-    .min(0, { message: "나이는 0 이상이어야 합니다." }),
+    .min(1, { message: "나이는 1살 이상이어야 합니다." }),
+});
+
+
+/**
+ * 상품 등록 폼 (ProductPostRequest 대응)
+ * - multipart/form-data 요청 중 JSON request 파트
+ * - 서버 @Valid 검증과 1:1 매칭
+ */
+export const productPostFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, { message: "제목은 필수입니다." })
+    .max(200, { message: "제목은 200자를 초과할 수 없습니다." }),
+
+  name: z
+    .string()
+    .min(1, { message: "상품명은 필수입니다." })
+    .max(255, { message: "상품명은 255자를 초과할 수 없습니다." }),
+
+  price: z
+    .number()
+    .min(0, { message: "가격은 0원 이상이어야 합니다." }),
+
+  description: z
+    .string()
+    .min(1, { message: "상품 설명은 필수입니다." }),
+
+  categoryId: z
+    .string()
+    .min(1, { message: "카테고리는 필수입니다." }),
+
+  status: z.enum(["NEW", "GOOD", "FAIR"], {
+    message: "상품 상태를 선택하세요.",
+  }),
+
+  tagIds: z.array(z.string()).optional(),
 });
