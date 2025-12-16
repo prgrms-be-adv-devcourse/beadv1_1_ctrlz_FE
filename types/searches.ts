@@ -1,5 +1,14 @@
 import { searchFormSchema } from "@/lib/formSchema";
 import {z} from "zod";
+import { TApiResponse } from "./base";
+
+
+export type TAutoCompleteWord = {
+  word: string;
+  qwertyInput: string;
+}
+
+export type TAutoComplerWordResponse = TApiResponse<TAutoCompleteWord[]>;
 
 //통합겁색
 export type TSearchQueryParams  = {

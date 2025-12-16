@@ -83,7 +83,7 @@ const SearchFilterForm = ({
 
   return (
     <div
-      className='p-2'
+      className="p-2 w-full max-w-[880px] mx-auto"
     >
       <Form {...form}>
         <FormLabel

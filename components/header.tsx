@@ -2,10 +2,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import logo from '@/public/logo.svg'
-import UserMenu from './userMenu'
+import UserMenu from '@/components/userMenu'
 import SearchInput from './search/searchInput'
 
 const Header = () => {
+  
   return (
     <header>
       <div className="fixed z-50 h-20 w-full bg-white shadow-md">

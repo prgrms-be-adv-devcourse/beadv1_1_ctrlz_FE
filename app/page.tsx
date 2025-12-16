@@ -18,6 +18,7 @@ export default async function Home() {
       <section className="mt-10"> 
         <Sectiontitle></Sectiontitle>
         <ProductSummaryList
+          
           items={recommandProductList}
           title="오늘의 추천 상품"
         />

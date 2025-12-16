@@ -13,6 +13,12 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation';
 import ApiPagination from '@/components/search/apiPagination';
 import SearchPagination from '@/components/search/searchPagination';
+import { getSearchedPostResult } from '@/services/getProductPostSummaryList';
+import AiRecommandResult from '@/components/products/aiRecommandResult';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { getCategoryList } from '@/services/getCategoryList';
+import { getTagList } from '@/services/getTagList';
 
 type Props = {
   searchParams: Promise<TSearchQueryParams>
@@ -23,7 +29,7 @@ const Search = ({ searchParams }: Props) => {
 
   const router = useRouter();
 
-  const searchProductResponse = dummyPagedProductList;
+  const [searchProductResponseList, setProductResponseList] = useState<TProductPageSummaryItem | null>(null);
 
   const [category, setCategory] = useState<TCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(resolvedParams.category ?? "");
@@ -53,9 +59,21 @@ const Search = ({ searchParams }: Props) => {
   );
 
   useEffect(() => {
-    setCategory(dummyCategoryList.data);
-    setTags(dummyTagList.data);
-  }, [])
+    const fetchData = async () => {
+      try {
+        const postRes = await getSearchedPostResult(resolvedParams);
+        const categoryRes = await getCategoryList();
+        const tagRes = await getTagList();
+        setProductResponseList(postRes);
+        setCategory(categoryRes.data);
+        setTags(tagRes.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  
+    fetchData();
+  }, []);
 
   useEffect(() => {
     // 여기서 검색 API 호출 (fetch)
@@ -153,17 +171,30 @@ const Search = ({ searchParams }: Props) => {
         handleChangeTradeStatus={handleChangeTradeStatus}
         handleChangeSort={handleChangeSort}
       />
-      <ProductSummaryList
-        title={`"${resolvedParams.q}" 검색 결과`}
-        items={searchProductResponse.contents}
-      />
-      <SearchPagination
-        current={Number(resolvedParams.page ?? searchProductResponse.pageNum)}
-        route="search"
-        length={searchProductResponse.totalPages}
-        params={resolvedParams} 
-        hasNext={searchProductResponse.hasNext}      
-      />
+      {searchProductResponseList && (
+        <ProductSummaryList
+          title={`"${resolvedParams.q}" 검색 결과`}
+          items={searchProductResponseList.contents}
+          headerRight={
+            <Link href="/post/enroll">
+              <Button variant="link">상품 등록</Button>
+            </Link>
+          }
+          subHeader={<AiRecommandResult keyword={resolvedParams.q} />}
+        />
+          
+      )}
+      {searchProductResponseList && (
+        <SearchPagination
+          current={Number(
+            resolvedParams.page ?? searchProductResponseList.pageNum
+          )}
+          route="search"
+          length={searchProductResponseList.totalPages}
+          params={resolvedParams}
+          hasNext={searchProductResponseList.hasNext}
+        />
+      )}
     </div>
   )
 }
