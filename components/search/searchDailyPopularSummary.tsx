@@ -2,7 +2,7 @@
 
 import { DUMMY_KEYWORDS } from "@/data/searchKeyword";
 import { getDaliyPopularKeywordList } from "@/services/getPopularKeywordList";
-import { TPopularKeyword } from "@/types/searches";
+import { TAutoCompleteWord, TPopularKeyword } from "@/types/searches";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -10,8 +10,8 @@ const SearchDailyPopularSummary = () => {
   const router = useRouter();
   const defaultKeyword = "잠시만 기다려주세요...";
 
-  const [daliyPopularKeywordList, setList] = useState<TPopularKeyword[]>([{
-    originValue: defaultKeyword,
+  const [daliyPopularKeywordList, setList] = useState<TAutoCompleteWord[]>([{
+    word: defaultKeyword,
     qwertyInput: "wkatlaks rlekfuwntpdy..."
   }]);
 
@@ -22,12 +22,20 @@ const SearchDailyPopularSummary = () => {
     const fetchData = async () => {
       try {
         const res = await getDaliyPopularKeywordList();
-        const keywordList = res.data.filter((keyword) => !!keyword.originValue);
 
+        console.log("🔥 daily popular keyword response:", res);
+        console.log("🔥 res.data:", res?.data);
+    
+        const keywordList = res.data.filter(
+          (keyword) => keyword.word && keyword.word.trim() !== ""
+        );
+    
+        console.log("🔥 filtered keywordList:", keywordList);
+    
         if (!isMounted) return;
         if (!res?.data) return;
-        if (keywordList.length === 0) return; // 결과 리스트 없으면 기존 상태 유지
-
+        if (keywordList.length === 0) return;
+    
         setList(keywordList);
       } catch (err) {
         console.error("Failed to fetch daily popular keywords", err);
@@ -50,6 +58,8 @@ const SearchDailyPopularSummary = () => {
     if(keyword === defaultKeyword) {
       return;
     }
+    //"를 제거"
+    keyword = keyword.replace(/"/g, "");
     router.push(`/search?q=${encodeURIComponent(keyword)}`);
   };
 
@@ -61,10 +71,10 @@ const SearchDailyPopularSummary = () => {
         {daliyPopularKeywordList.map((keyword, index) => (
           <li
             key={index}
-            onClick={() => handleClickKeyword(keyword.originValue)}
+            onClick={() => handleClickKeyword(keyword.word)}
             className="cursor-pointer rounded-full bg-white px-3 py-1 text-gray-700 shadow-sm hover:bg-[#A57C76] hover:text-white transition"
           >
-            {keyword.originValue}
+            {keyword.word}
           </li>
         ))}
       </ul>
