@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { processPaymentConfirm } from "@/services/processPayment";
-import { TRequestPaymentConfirm } from "@/types/paymentTypes";
-import { Button } from "@/components/ui/button";
-import OrderSummary from "@/components/payment/orderSummary";
+import { Suspense } from "react";
 
-const PaymentSuccessPage = () => {
+const PaymentSuccessContent = () => {
+  const { useEffect, useState } = require("react");
+  const { useSearchParams, useRouter } = require("next/navigation");
+  const { processPaymentConfirm } = require("@/services/processPayment");
+  const { Button } = require("@/components/ui/button");
+  const OrderSummary = require("@/components/payment/orderSummary").default;
+
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -43,7 +44,7 @@ const PaymentSuccessPage = () => {
         throw new Error("결제 필수 정보가 없습니다.");
       }
 
-      const requestData: TRequestPaymentConfirm = {
+      const requestData = {
         paymentKey,
         orderId,
         amount: totalAmount + usedDepositAmount,
@@ -118,6 +119,14 @@ const PaymentSuccessPage = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const PaymentSuccessPage = () => {
+  return (
+    <Suspense fallback={<div className="text-center text-gray-600">결제 정보를 확인 중입니다...</div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 };
 
