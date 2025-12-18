@@ -12,12 +12,24 @@ type Props = {
 const AiRecommandResult = ({keyword}: Props) => {
 
   const [recommand, setRecommand] = useState<TRecommand>();
+  const [isFetching, setFetching] = useState<boolean>(false);
 
   const getAiRecommandResult = async (keyword?: string) => {
-    if(keyword) {
-      const res = await getAiRecommand(keyword);
-      setRecommand(res.data);
+    if(isFetching) {
+      alert('잠시만 기다려주세요.')
     }
+    try {
+      setFetching(true);
+      if(keyword) {
+        const res = await getAiRecommand(keyword);
+        setRecommand(res.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetching(false);
+    }
+    
     
   }
 
@@ -34,6 +46,7 @@ const AiRecommandResult = ({keyword}: Props) => {
         추천 받기
       </Button>
       <div>
+        {isFetching && <p>답변 생성 중입니다...</p>}
         <p>{recommand?.message}</p>
       </div>
     </div>
