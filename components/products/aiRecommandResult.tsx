@@ -29,8 +29,6 @@ const AiRecommandResult = ({keyword}: Props) => {
     } finally {
       setFetching(false);
     }
-    
-    
   }
 
   return (
