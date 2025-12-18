@@ -127,7 +127,7 @@ const PaymentRequest = ({ payInfo }: Props) => {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-white rounded-xl shadow-lg p-6 space-y-6">
+    <div className="w-full max-w-xl mx-auto bg-white rounded-xl shadow-lg p-6 space-y-6 max-h-[700px] overflow-y-scroll">
       <h2 className="text-xl font-semibold">결제 확인</h2>
 
       <div className="space-y-1 text-sm text-gray-700">
