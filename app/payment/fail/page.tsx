@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import OrderSummary from "@/components/payment/orderSummary";
+import { Suspense } from "react";
 
-const PaymentFail = () => {
+const PaymentFailContent = () => {
+  const { useEffect, useState } = require("react");
+  const { useSearchParams, useRouter } = require("next/navigation");
+  const OrderSummary = require("@/components/payment/orderSummary").default;
+
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -73,6 +75,14 @@ const PaymentFail = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const PaymentFail = () => {
+  return (
+    <Suspense fallback={null}>
+      <PaymentFailContent />
+    </Suspense>
   );
 };
 
