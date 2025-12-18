@@ -37,7 +37,7 @@ const fetchUtil = async (
   });
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json"
   };
 
   const response = await fetch(url.toString(), {

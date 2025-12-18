@@ -20,3 +20,19 @@ export const getSearchedPostResult = async (params: TSearchQueryParams): Promise
     throw err;
   }
 }
+
+
+export const getDailyProductList = async (): Promise<TProductPageSummaryItem> => {
+  const res = await fetchInstance.get('/product-posts/search/daily');
+  return res;
+}
+
+export const getSellerProductList = async (productPostId: string): Promise<TProductPageSummaryItem> => {
+  const res = await fetchInstance.get(`/product-posts/search/${productPostId}/by-seller`);
+  return res;
+}
+
+export const getSimilarProductList = async (productPostId: string): Promise<TProductPageSummaryItem> => {
+  const res = await fetchInstance.get(`/product-posts/search/${productPostId}/similar`);
+  return res;
+}

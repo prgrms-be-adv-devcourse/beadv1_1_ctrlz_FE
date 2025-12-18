@@ -33,6 +33,7 @@ const ProductSummaryList = ({ items, title, headerRight, subHeader }: Props) => 
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
         {
+          items.length > 0 ?
           items.map((item, index)=> 
             <Card
               className="border-none p-0 shadow-none m-auto hover:cursor-pointer"
@@ -51,7 +52,8 @@ const ProductSummaryList = ({ items, title, headerRight, subHeader }: Props) => 
                 <CardDate>{getTimeAgo(item.updatedAt)}</CardDate>
               </CardDescription>
             </Card>
-          )
+          ) : 
+          <div>상품이 없습니다.</div>
         }
         
       </div>

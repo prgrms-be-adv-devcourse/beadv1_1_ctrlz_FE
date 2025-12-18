@@ -1,15 +1,18 @@
 import { TCartSummaryItem } from '@/types/cartTypes'
-import React from 'react'
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { deleteCartItem } from '@/services/deleteCartItem';
 
 type Props = {
   item: TCartSummaryItem;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  onDelete: (cartItemId: string) => void;
 };
 
-const CartSummaryItem = ({ item, checked, onCheckedChange }: Props) => {
+const CartSummaryItem = ({ item, checked, onCheckedChange, onDelete }: Props) => {
+
+
   return (
     <div
       className="
@@ -29,6 +32,7 @@ const CartSummaryItem = ({ item, checked, onCheckedChange }: Props) => {
           text-sm
           px-0
         "
+        onClick={() => onDelete(item.cartItemId)}
       >
         삭제
       </Button>

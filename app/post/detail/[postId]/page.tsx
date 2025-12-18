@@ -1,5 +1,5 @@
 "use client";
-import { TProductPost, TProductPostResponse, TProductSummaryItem, TProductSummaryResponse } from '@/types/productPostTypes';
+import { TProductPageSummaryItem, TProductPost, TProductPostResponse, TProductSummaryItem, TProductSummaryResponse } from '@/types/productPostTypes';
 import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
@@ -17,6 +17,7 @@ import ReviewItem from '@/components/review/reviewItem';
 import ProductSummaryList from '@/components/products/productSummaryList';
 import { getProductPostDetail } from '@/services/getProductPostDetail';
 import { addCartItem } from '@/services/addCartItem';
+import { getSellerProductList, getSimilarProductList } from '@/services/getProductPostSummaryList';
 
 const PostDetail = () => {
   
@@ -25,7 +26,7 @@ const PostDetail = () => {
   const [review, setReview] = useState<TReview | null>(null);
   const [similarProducts, setSimilarProducts] = useState<TProductSummaryItem[] | null>(null);
   {/* 함께 본 상품 */}
-  const [alsoViewedProducts, setAlsoViewedProducts] = useState<TProductSummaryItem[] | null>(null);
+  const [sellerProducts, setSellerProducts] = useState<TProductSummaryItem[] | null>(null);
 
   const [isModalOpen, setModalOpen] = useState<boolean| null>(false);
 
@@ -35,13 +36,13 @@ const PostDetail = () => {
     const fetchPost = async () => {
       const postRes: TProductPostResponse = await getProductPostDetail(postId);
       const reviewRes: TReviewResponse = dummyReviewData;
-      const similarRes: TProductSummaryResponse = dummyRecommandProductList;
-      const alsoViewedRes: TProductSummaryResponse = dummyRecommandProductList;
+      const similarRes: TProductPageSummaryItem = await getSimilarProductList(postId);
+      const sellerListRes: TProductPageSummaryItem = await getSellerProductList(postId);
 
       setPost(postRes.data)
       setReview(reviewRes.data);
-      setSimilarProducts(similarRes.data);
-      setAlsoViewedProducts(alsoViewedRes.data);
+      setSimilarProducts(similarRes.contents);
+      setSellerProducts(sellerListRes.contents);
     };
 
     fetchPost();
@@ -218,24 +219,25 @@ const PostDetail = () => {
         </Modal>
       }
      </div>
+     {/* 판매자가 올린 다른 상품 */}
+     {
+      sellerProducts && (
+        <ProductSummaryList
+          items={sellerProducts}
+          title="판매자가 올린 다른 상품"
+        />
+      )
+     }
      {/* 유사 상품 */}
      {
       similarProducts && (
         <ProductSummaryList
-          items={similarProducts}
+          items={similarProducts || []}
           title="이 상품과 유사한 상품"
         />
       )
      }
-     {/* 함께 본 상품 */}
-     {
-      alsoViewedProducts && (
-        <ProductSummaryList
-          items={alsoViewedProducts}
-          title="다른 사용자는 이 상품도 같이 찾아봤어요"
-        />
-      )
-     }
+     
     </div>
   )
 }
