@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +21,13 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
+import Modal from "@/components/modal";
+import { Progress } from "@/components/ui/progress";
+import { TCategoryResponse } from "@/types/categoryTypes";
+import { getCategoryList } from "@/services/getCategoryList";
+import { TTagResponse } from "@/types/tagTypes";
+import { getTagList } from "@/services/getTagList";
+import { createProductPost } from "@/services/createProductPost";
 
 type ProductPostFormValues = z.infer<typeof productPostFormSchema>;
 
@@ -41,30 +50,43 @@ const STATUS_OPTIONS = [
   { value: "NEW", label: "새상품" },
   { value: "GOOD", label: "중고" },
   { value: "FAIR", label: "사용감 많음" },
-];
+] as const;
 
-const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
+const ProductPostEnrollForm = () => {
+  const router = useRouter();
   const [images, setImages] = useState<File[]>([]);
   const [primaryIndex, setPrimaryIndex] = useState<number>(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagKeyword, setTagKeyword] = useState("");
+  const [tags, setTags] = useState<TTagResponse>();
+  const [categories, setCategories] = useState<TCategoryResponse>();
+  const [isFetching, setFetching] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const categoryRes = await getCategoryList();
+      const tagRes = await getTagList();
+
+      setTags(tagRes);
+      setCategories(categoryRes)
+    }
+
+    fetchData();
+  }, [])
 
   const form = useForm<ProductPostFormValues>({
     resolver: zodResolver(productPostFormSchema),
     defaultValues: {
       title: "",
-      name: "",
-      price: 0,
       description: "",
+      name: "사용하지 않는 컬럼",
       categoryId: "",
-      status: "NEW",
       tagIds: [],
+      status: undefined as unknown as ProductPostFormValues["status"], // ✅ 선택 전은 undefined
+      price: undefined as unknown as ProductPostFormValues["price"],   // ✅ 숫자 input 경고/UX 안정화
     },
   });
-
-  useEffect(() => {
-    
-  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -100,51 +122,62 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
   };
 
   const toggleTag = (tagId: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId)
+    setSelectedTags((prev) => {
+      const next = prev.includes(tagId)
         ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
-    );
-    form.setValue(
-      "tagIds",
-      selectedTags.includes(tagId)
-        ? selectedTags.filter((id) => id !== tagId)
-        : [...selectedTags, tagId]
-    );
+        : [...prev, tagId];
+
+      form.setValue("tagIds", next, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+
+      return next;
+    });
   };
 
-  const onSubmit = async (values: ProductPostFormValues) => {
-    const formData = new FormData();
-
-    const orderedImages = [...images];
-    if (primaryIndex !== 0) {
-      const [primary] = orderedImages.splice(primaryIndex, 1);
-      orderedImages.unshift(primary);
+ const onSubmit = async (values: ProductPostFormValues) => {
+    if(isFetching) {
+      alert('등록중입니다');
+      return;
     }
-
-    orderedImages.forEach((file) => {
-      formData.append("images", file);
-    });
-
-    formData.append(
-      "request",
-      new Blob([JSON.stringify({ ...values, tagIds: selectedTags })], {
-        type: "application/json",
-      })
-    );
-
     try {
-      await fetch("/api/products", {
-        method: "POST",
-        body: formData,
-      });
+      setFetching(true);
+      setUploadProgress(30);
+      // simulate a short delay if you want to see the progress bar
+      setUploadProgress(70);
+      await createProductPost(
+        {
+          ...values,
+          tagIds: selectedTags,
+        },
+        images,
+        primaryIndex
+      );
+      setUploadProgress(100);
+      alert("상품을 등록했습니다.");
+      //전페이지로 이동
+      router.back();
     } catch (e) {
       console.error("상품 등록 실패", e);
+    } finally {
+      setFetching(false);
+      setTimeout(() => setUploadProgress(0), 500); // reset after closing
     }
   };
 
   return (
-    <Form {...form}>
+    <>
+      <Modal isModalOpen={isFetching} closeModal={() => {}}>
+        <div className="flex flex-col items-center justify-center min-h-[200px] bg-white rounded-xl px-8 py-10 shadow-lg">
+          <span className="text-lg font-semibold mb-6 text-center">상품을 등록하는 중입니다...</span>
+          <div className="w-56">
+            <Progress value={uploadProgress} />
+          </div>
+        </div>
+      </Modal>
+      <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className="
@@ -185,20 +218,6 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>상품명</FormLabel>
-                <FormControl className="mt-2">
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="price"
             render={({ field }) => (
               <FormItem>
@@ -210,19 +229,18 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
                           [&::-webkit-outer-spin-button]:appearance-none
                           [-moz-appearance:textfield]"
                     type="number"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(Number(e.target.value))
-                    }
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      field.onChange(v === "" ? undefined : Number(v));
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
-
-        {categories.length > 0 && (
+          {categories && categories.data.length > 0 && (
           <FormField
             control={form.control}
             name="categoryId"
@@ -239,7 +257,7 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
                     "
                   >
                     <option value="">카테고리를 선택하세요</option>
-                    {categories.map((cat) => (
+                    {categories?.data.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
                       </option>
@@ -251,7 +269,8 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
             )}
           />
         )}
-
+        </div>
+        
         <FormField
           control={form.control}
           name="description"
@@ -276,19 +295,37 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
             <FormItem>
               <FormLabel>상품 상태</FormLabel>
               <FormControl className="mt-2">
-                <div className="flex gap-2">
-                  {STATUS_OPTIONS.map((s) => (
-                    <Button
-                      key={s.value}
-                      type="button"
-                      variant={
-                        field.value === s.value ? "default" : "outline"
-                      }
-                      onClick={() => field.onChange(s.value)}
-                    >
-                      {s.label}
-                    </Button>
-                  ))}
+                <div role="radiogroup" className="flex gap-2">
+                  {STATUS_OPTIONS.map((s) => {
+                    const isSelected = field.value === s.value;
+
+                    return (
+                      <Button
+                        key={s.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        variant={isSelected ? "default" : "outline"}
+                        className={
+                          isSelected
+                            ? "flex-1 ring-2 ring-[#A57C76] border-[#A57C76] bg-[#A57C76] text-white"
+                            : "flex-1 border-[#A57C76] text-[#A57C76]"
+                        }
+                        onClick={() => {
+                          // RHF 컨트롤러에도 확실히 반영
+                          field.onChange(s.value);
+                          form.setValue("status", s.value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                            shouldTouch: true,
+                          });
+                          form.clearErrors("status");
+                        }}
+                      >
+                        {s.label}
+                      </Button>
+                    );
+                  })}
                 </div>
               </FormControl>
               <FormMessage />
@@ -351,7 +388,7 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
           )}
         </div>
 
-        {tags.length > 0 && (
+        {tags && tags.data.length > 0 && (
           <div>
             <FormLabel>태그 선택</FormLabel>
 
@@ -366,9 +403,10 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
 
             {/* 자동완성 태그 목록 */}
             <div className="flex gap-2 flex-wrap mt-3">
-              {tags
+              {tags.data
                 .filter(
                   (tag) =>
+                    tagKeyword.length > 0 &&
                     tag.name.includes(tagKeyword) &&
                     !selectedTags.includes(tag.id)
                 )
@@ -391,7 +429,7 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
             {/* 선택된 태그 */}
             {selectedTags.length > 0 && (
               <div className="flex gap-2 flex-wrap mt-3">
-                {tags
+                {tags.data
                   .filter((tag) => selectedTags.includes(tag.id))
                   .map((tag) => (
                     <Badge
@@ -412,7 +450,8 @@ const ProductPostEnrollForm = ({ tags = [], categories = [] }: Props) => {
           상품 등록하기
         </Button>
       </form>
-    </Form>
+      </Form>
+    </>
   );
 };
 

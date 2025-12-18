@@ -3,20 +3,41 @@ import React from "react";
 import { Button } from "../ui/button";
 import { TCartSummaryItem } from "@/types/cartTypes";
 import { useRouter } from "next/navigation";
+import { prepareOrderInfo } from "@/services/prepareOrder";
 
 type Props = {
   items: TCartSummaryItem[];
+  isFetching: boolean
+  setProgressingModal: (v: boolean) => void;
+  setPayInfo: (info: any) => void;
+  setPayModalOpen: (v: boolean) => void;
 };
 
-const OrderSummaryItem = ({ items }: Props) => {
+const OrderSummaryItem = ({
+  items,
+  isFetching,
+  setProgressingModal,
+  setPayInfo,
+  setPayModalOpen,
+}: Props) => {
   const totalPrice = items.reduce((acc, item) => acc + item.price, 0);
   const deliveryFee = 0;
   const finalPrice = totalPrice + deliveryFee;
   const router = useRouter();
 
-  const moveToPaymentPage = () => {
-    const orderId = "order1";
-    router.push(`/payment/${orderId}`)
+  const moveToPaymentPage = async () => {
+    if(isFetching) return;
+    try {
+      setProgressingModal(true);
+      const cartItemIds = items.map(item => item.cartItemId);
+      const res = await prepareOrderInfo(cartItemIds);
+      setPayInfo(res.data);
+    } catch (e) {
+      alert(e);
+    } finally {
+      setProgressingModal(false);
+      setPayModalOpen(true);
+    }  
   }
 
   return (

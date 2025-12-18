@@ -9,7 +9,7 @@ import { Input } from '../ui/input';
 import { TTag } from '@/types/tagTypes';
 import { TCategory } from '@/types/categoryTypes';
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Select,
   SelectTrigger,
@@ -58,6 +58,9 @@ const SearchFilterForm = ({
   handleChangeTradeStatus,
 }: Props) => {
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   const form = useForm<SearchFormSchema>({
 
   });
@@ -65,20 +68,57 @@ const SearchFilterForm = ({
   const buildSearchHref = () => {
     const searchParams = new URLSearchParams();
 
-    if (params.q) searchParams.set("q", params.q);
-    if (selectedCategory) searchParams.set("category", selectedCategory);
+    // params.q가 없으면 빈 문자열로 설정 (전체 검색 허용)
+    searchParams.set("q", params.q ?? "");
+
+    const selectedCategoryName =
+      category.find(c => String(c.id) === selectedCategory)?.name;
+
+    if (selectedCategoryName) {
+      searchParams.set("category", selectedCategoryName);
+    }
+
     if (minPrice) searchParams.set("minPrice", minPrice);
     if (maxPrice) searchParams.set("maxPrice", maxPrice);
-    if (selectedTags.length > 0) {
-      searchParams.set("tags", selectedTags.join(","));
+    if (selectedTags.length > 0 && tag) {
+      const tagNames = tag
+        .filter(t => selectedTags.includes(String(t.id)))
+        .map(t => t.name);
+
+      if (tagNames.length > 0) {
+        searchParams.set("tags", tagNames.join(","));
+      }
     }
     if (selectedStatus !== "ALL") searchParams.set("status", selectedStatus);
     if (selectedTradeStatus !== "ALL") searchParams.set("tradeStatus", selectedTradeStatus);
     if (sort !== "score") searchParams.set("sort", sort);
 
-    searchParams.set("page", "1"); // reset to first page on new search
+    searchParams.set("page", "0");
 
-    return "/search?" + searchParams.toString();
+    const currentUrl = pathname + "?" + new URLSearchParams({
+      ...params,
+      category: selectedCategoryName,
+      minPrice,
+      maxPrice,
+      tags: selectedTags.length > 0 && tag ? tag
+        .filter(t => selectedTags.includes(String(t.id)))
+        .map(t => t.name)
+        .join(",") : undefined,
+      status: selectedStatus !== "ALL" ? selectedStatus : undefined,
+      tradeStatus: selectedTradeStatus !== "ALL" ? selectedTradeStatus : undefined,
+      sort: sort !== "score" ? sort : undefined,
+      page: "0"
+    } as any).toString();
+
+    const nextUrl = `/search?${searchParams.toString()}`;
+
+    if (nextUrl === currentUrl) {
+      // 동일 URL이어도 검색 결과를 다시 가져오도록 강제 리프레시
+      router.refresh();
+      return;
+    }
+
+    router.push(nextUrl);
   };
 
   return (
@@ -92,7 +132,10 @@ const SearchFilterForm = ({
           조건검색
         </FormLabel>
         <form
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={(e) => {
+            e.preventDefault();
+            buildSearchHref();
+          }}
         >
           <table className="
             w-full
@@ -314,14 +357,12 @@ const SearchFilterForm = ({
                 <td />
                 <td className="pt-2">
                   <div className="flex justify-end pt-4">
-                    <Link href={buildSearchHref()}>
-                      <Button
-                        type="button"
-                        className="bg-[#A57C76] text-white hover:bg-[#8f6964]"
-                      >
-                        검색하기
-                      </Button>
-                    </Link>
+                    <Button
+                      type="submit"
+                      className="bg-[#A57C76] text-white hover:bg-[#8f6964]"
+                    >
+                      검색하기
+                    </Button>
                   </div>
                 </td>
               </tr>

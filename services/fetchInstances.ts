@@ -1,21 +1,23 @@
-import Cookies from "js-cookie";
-
+let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
-const refreshToken = () => {
-  if (!refreshPromise) {
-    refreshPromise = fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reissue`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    )
-      .then(() => undefined)
+const refreshToken = async () => {
+  if (!isRefreshing) {
+    isRefreshing = true;
+    refreshPromise = fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reissue`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Token refresh failed");
+        }
+      })
       .finally(() => {
-        refreshPromise = null;
+        isRefreshing = false;
       });
   }
+
   return refreshPromise;
 };
 
@@ -38,13 +40,6 @@ const fetchUtil = async (
     "Content-Type": "application/json",
   };
 
-  if (typeof window !== "undefined") {
-    const accessToken = Cookies.get("ACCESS_TOKEN");
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
-  }
-
   const response = await fetch(url.toString(), {
     method,
     headers,
@@ -52,18 +47,23 @@ const fetchUtil = async (
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  if (response.status === 401 && !retried && endpoint !== "/reissue") {
-    // ✅ 쿠키 재발급 후 기존 요청 다시 보냄
-    await refreshToken();
-    return fetchUtil(endpoint, method, params, body, true);
+  // ✅ 정상 응답
+  if (response.ok) {
+    return response.json();
   }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Status: ${response.status}`);
+  // 🔁 ACCESS TOKEN 만료 → 재발급 후 1회 재시도
+  if (response.status === 401 && !retried) {
+    try {
+      await refreshToken();
+      return fetchUtil(endpoint, method, params, body, true);
+    } catch (e) {
+      throw e;
+    }
   }
 
-  return response.json();
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(errorData.message || `Status: ${response.status}`);
 };
 
 export const fetchInstance = {

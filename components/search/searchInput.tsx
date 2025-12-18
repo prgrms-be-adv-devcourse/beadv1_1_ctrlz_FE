@@ -1,11 +1,11 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useTransition } from 'react'
 import { createPortal } from "react-dom";
 import { Input } from '@/components/ui/input'
 import { Button } from '../ui/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { getAutoCompleteWordList } from '@/services/getAutoCompleteWordList';
 import { saveKeyWord } from '@/services/saveKeyword';
 
@@ -17,7 +17,7 @@ const SearchInput = () => {
   const [keyword,setKeyword] = useState(q);
 
   const [autoCompleteResults, setAutoCompleteResults] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -28,12 +28,11 @@ const SearchInput = () => {
     top: number;
   } | null>(null);
   
-  const searchParams = new URLSearchParams(params);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     setKeyword(q);
-    setIsLoading(false); // 라우팅/검색 완료 시점에 로딩 해제
   }, [q]);
 
 
@@ -67,13 +66,26 @@ const SearchInput = () => {
 
   const MoveToSearchResult = async (searchWord?: string) => {
     const value = searchWord ?? keyword;
-    if (!value.trim()) return;
 
-    setIsLoading(true);
-    await saveKeyWord(value)
+    await saveKeyWord(value);
     setAutoCompleteResults([]);
-    searchParams.set("q", value);
-    router.push("/search?" + searchParams.toString());
+
+    // 🔥 조건 초기화: 새로운 URLSearchParams 사용
+    const nextSearchParams = new URLSearchParams();
+    nextSearchParams.set("q", value);
+
+    const nextUrl = "/search?" + nextSearchParams.toString();
+    const currentUrl = pathname + "?" + params.toString();
+
+    startTransition(() => {
+      // ✅ 동일 URL이어도 검색 결과를 다시 가져오도록 강제 리프레시
+      if (nextUrl === currentUrl) {
+        router.refresh();
+        return;
+      }
+
+      router.push(nextUrl);
+    });
   }
 
   useEffect(() => {
@@ -97,7 +109,7 @@ const SearchInput = () => {
 
   return (
     <>
-      <div ref={containerRef} className="flex items-center gap-3 w-1/2 relative">
+      <div ref={containerRef} className="flex items-center gap-3 w-1/2 relative x-70">
         <Input
           ref={inputRef}
           className='border-[#A57C76] border-2'
@@ -123,7 +135,7 @@ const SearchInput = () => {
                 left: dropdownStyle.left,
                 width: dropdownStyle.width,
               }}
-              className="z-[9999]"
+              className="z-70"
               onMouseDown={(e) => {
                 // document mousedown(outside-click)보다 먼저 실행되는 단계에서 차단
                 e.stopPropagation();
@@ -161,9 +173,9 @@ const SearchInput = () => {
             hover:cursor-pointer
           "
           onClick={() => MoveToSearchResult()}
-          disabled={isLoading}
+          disabled={isPending}
         >
-          {isLoading ? "검색 중..." : <FontAwesomeIcon icon={faMagnifyingGlass} />}
+          {isPending ? "검색 중..." : <FontAwesomeIcon icon={faMagnifyingGlass} />}
         </Button>
       </div>
     </>

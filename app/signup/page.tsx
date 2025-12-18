@@ -15,7 +15,7 @@ const Signup = ({searchParams}: Props) => {
   return (
     <div className="m-auto mt-20 w-full max-w-[600px] px-4">
       <Sectiontitle>추가 정보 입력</Sectiontitle>
-      <UserInfoForm email={params.email} />
+      <UserInfoForm name={params.nickname} email={params.email} />
     </div>
   );
 };

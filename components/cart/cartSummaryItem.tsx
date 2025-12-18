@@ -37,7 +37,7 @@ const CartSummaryItem = ({ item, checked, onCheckedChange }: Props) => {
         onCheckedChange={(value) => onCheckedChange(!!value)}
       />
       <img
-        src={item.url}
+        src={item.primaryUrl}
         alt={item.title}
         className="
           w-24 h-24

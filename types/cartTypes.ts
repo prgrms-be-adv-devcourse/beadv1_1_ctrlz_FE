@@ -1,9 +1,10 @@
 import { TApiResponse } from "./base";
 
+
 export type TCartSummaryItem = {
   cartItemId: string,
   title: string,
-  url: string,
+  primaryUrl: string,
   name: string,
   price: number,
   isSelected: boolean;

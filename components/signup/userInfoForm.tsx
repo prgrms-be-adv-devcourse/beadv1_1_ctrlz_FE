@@ -19,9 +19,10 @@ import { signUp } from '@/services/signup';
 import { useAuthStore } from '@/store/authStore';
 type Props = {
   email: string
+  name: string
 }
 
-const UserInfoForm = ({email}: Props) => {
+const UserInfoForm = ({email, name}: Props) => {
   
   const [isFetching, setFetching] = useState<boolean>(false);
   const { checkAuth } = useAuthStore();
@@ -35,7 +36,7 @@ const UserInfoForm = ({email}: Props) => {
       state: "",
       city: "",
       details: "",
-      name: "",
+      name: name,
       nickname: "",
       oauthId: "google",
       age: 0,
@@ -100,7 +101,7 @@ const UserInfoForm = ({email}: Props) => {
                           <FormItem className="space-y-2">
                             <FormLabel className="sr-only">이름</FormLabel>
                             <FormControl>
-                              <Input placeholder="이름" {...field} />
+                              <Input placeholder="이름" {...field} readOnly/>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
