@@ -5,6 +5,7 @@ import Modal from '@/components/modal';
 import PaymentRequest from '@/components/payment/paymentRequest';
 import { Sectiontitle } from '@/components/ui/sectionTitle';
 import { dummyCartSummaryItem } from '@/data/cartItem';
+import { deleteCartItem } from '@/services/deleteCartItem';
 import { getCartItemList } from '@/services/getCartItemList';
 import { TCartSummaryItem } from '@/types/cartTypes'
 import { TPaymentInfo } from '@/types/paymentTypes';
@@ -36,6 +37,11 @@ const Cart = () => {
       return prev.filter((i) => i.cartItemId !== item.cartItemId);
     });
   };
+
+  const deleteItem = async (cartItemId: string) => {
+    const res = await deleteCartItem(cartItemId);
+    alert(res.data);
+  }
 
   return (
     <div
@@ -78,6 +84,7 @@ const Cart = () => {
                 (selected) => selected.cartItemId === item.cartItemId
               )}
               onCheckedChange={(checked) => toggleItem(item, checked)}
+              onDelete={() => deleteItem(item.cartItemId)}
             />
           )
         }

@@ -12,6 +12,8 @@ type Props = {
 }
 const SearchPagination = ({current, route, length, params, hasNext}: Props) => {
 
+const PAGE_WINDOW = 5;
+
 const searchParams = new URLSearchParams();
 
 Object.entries(params).forEach(([key, value]) => {
@@ -29,25 +31,34 @@ Object.entries(params).forEach(([key, value]) => {
     return "/" + route + "?" + searchParams.toString();
   };
 
+  // current is 0-based, so convert to 1-based for grouping
+  const currentPage = current + 1;
+  const groupStart =
+    Math.floor((currentPage - 1) / PAGE_WINDOW) * PAGE_WINDOW + 1;
+
+  const startPage = groupStart;
+  const endPage = Math.min(length, startPage + PAGE_WINDOW - 1);
 
   return (
-    <Pagination>
+    <Pagination
+      className='mb-10'
+    >
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            href={sethref(Math.max(1, current - 1))}
+            href={sethref(Math.max(0, startPage - 2))}
             className={current > 1 ? "" : "hidden"}
           />
         </PaginationItem>
-        {Array.from({ length: length || 0 }).map((_, i) => {
-          const pageNumber = i + 1;
+        {Array.from({ length: endPage - startPage + 1 }).map((_, i) => {
+          const pageNumber = startPage + i;
 
           return (
             <PaginationItem key={pageNumber}>
               <PaginationLink
-                className={current === pageNumber-1 ? "bg-[#A57C76] text-[#F9F6F3]" : ""}
-                isActive={current === pageNumber-1}
-                href={sethref(pageNumber-1)}
+                className={current === pageNumber - 1 ? "bg-[#A57C76] text-[#F9F6F3]" : ""}
+                isActive={current === pageNumber - 1}
+                href={sethref(pageNumber - 1)}
               >
                 {pageNumber}
               </PaginationLink>
@@ -56,7 +67,7 @@ Object.entries(params).forEach(([key, value]) => {
         })}
         <PaginationItem>
           <PaginationNext
-            href={sethref(current + 1)}
+            href={sethref(Math.min(length - 1, endPage))}
             className={hasNext ? "" : "hidden"}
           />
         </PaginationItem>

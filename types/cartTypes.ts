@@ -11,3 +11,5 @@ export type TCartSummaryItem = {
 }
 
 export type TCartSummaryItemResponse = TApiResponse<TCartSummaryItem[]>;
+
+export type TDeleteCartItemResponse = TApiResponse<void>;

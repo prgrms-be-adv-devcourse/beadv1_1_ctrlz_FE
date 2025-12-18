@@ -18,3 +18,12 @@ export type TPaymentInfo = {
 
 
 export type TPaymentInfoResponse = TApiResponse<TPaymentInfo>;
+
+
+export type TUserDeposit = {
+  depositId: string;
+	balance: number;
+	message: string
+}
+
+export type TUserDepositResponse = TApiResponse<TUserDeposit>;

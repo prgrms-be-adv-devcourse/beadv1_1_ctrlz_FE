@@ -24,3 +24,10 @@ export type TSearchQueryParams  = {
 };
 
 export type SearchFormSchema = z.infer<typeof searchFormSchema>;
+
+export type TPopularKeyword = {
+  originValue: string;
+  qwertyInput: string;
+}
+
+export type TPopularKeywordResponse = TApiResponse<TPopularKeyword[]>;

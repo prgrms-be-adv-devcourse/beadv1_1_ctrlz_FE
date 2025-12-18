@@ -177,6 +177,7 @@ const ProductPostEnrollForm = () => {
           </div>
         </div>
       </Modal>
+      <div className="flex justify-center">
       <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -215,6 +216,7 @@ const ProductPostEnrollForm = () => {
           )}
         />
 
+          {/* 중앙정렬하도록 */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -451,6 +453,7 @@ const ProductPostEnrollForm = () => {
         </Button>
       </form>
       </Form>
+      </div>
     </>
   );
 };

@@ -3,6 +3,7 @@ import { Sectiontitle } from '../ui/sectionTitle'
 import { Button } from '@/components/ui/button'
 import { TRecommand, TRecommandResponse } from '@/types/aiTypes'
 import { getRecommand } from '@/services/getRecommand'
+import { getAiRecommand } from '@/services/getAiRecommand'
 
 type Props = {
   keyword?: string;
@@ -13,8 +14,11 @@ const AiRecommandResult = ({keyword}: Props) => {
   const [recommand, setRecommand] = useState<TRecommand>();
 
   const getAiRecommandResult = async (keyword?: string) => {
-    const res = await getRecommand("keyword");
-    setRecommand(res.data);
+    if(keyword) {
+      const res = await getAiRecommand(keyword);
+      setRecommand(res.data);
+    }
+    
   }
 
   return (

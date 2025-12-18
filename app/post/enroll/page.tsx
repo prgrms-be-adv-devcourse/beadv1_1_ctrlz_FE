@@ -6,7 +6,7 @@ const PostEnroll = () => {
   
   return (
     <div
-      className='w-[80vw] py-4 my-10'
+      className='m-auto w-[80vw] py-4 my-10'
     >
       <ProductPostEnrollForm/>
     </div>
