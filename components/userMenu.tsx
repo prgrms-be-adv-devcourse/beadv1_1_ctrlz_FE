@@ -1,30 +1,27 @@
 "use client"
 import { faCartShopping, faUser } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import LoginModal from '@/components/login/loginModal'
 import UserDeposit from './userDeposit'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import { getMyInfo } from '@/services/getMyInfo'
 import { Button } from './ui/button'
 
 const UserMenu = () => {
-  const {isLogin, checkAuth, login} =  useAuthStore();
+  const { isLogin, checkAuth, isChecking } = useAuthStore();
   const pathname = usePathname();
-  const { data } = useQuery({
-    queryKey: ["getMyInfo"],
-    queryFn: getMyInfo,
-    enabled: isLogin,
-  });
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+  }, [checkAuth, pathname]);
+
+  if (isChecking) {
+    return null; // 또는 로딩 UI
+  }
 
   return (
     <div className="flex justify-center items-center gap-4">
@@ -63,6 +60,10 @@ const UserMenu = () => {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={async () => {
+          await checkAuth();
+          setIsLoginModalOpen(false);
+        }}
       />
     </div>
   )

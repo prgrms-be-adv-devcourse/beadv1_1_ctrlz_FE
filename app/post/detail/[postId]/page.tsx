@@ -15,6 +15,8 @@ import { dummyProductPostDetail, dummyRecommandProductList } from '@/data/produc
 import { dummyReviewData } from '@/data/reviews';
 import ReviewItem from '@/components/review/reviewItem';
 import ProductSummaryList from '@/components/products/productSummaryList';
+import { getProductPostDetail } from '@/services/getProductPostDetail';
+import { addCartItem } from '@/services/addCartItem';
 
 const PostDetail = () => {
   
@@ -31,7 +33,7 @@ const PostDetail = () => {
 
   useEffect(() => {
     const fetchPost = async () => {
-      const postRes: TProductPostResponse = dummyProductPostDetail;
+      const postRes: TProductPostResponse = await getProductPostDetail(postId);
       const reviewRes: TReviewResponse = dummyReviewData;
       const similarRes: TProductSummaryResponse = dummyRecommandProductList;
       const alsoViewedRes: TProductSummaryResponse = dummyRecommandProductList;
@@ -41,18 +43,17 @@ const PostDetail = () => {
       setSimilarProducts(similarRes.data);
       setAlsoViewedProducts(alsoViewedRes.data);
     };
+
     fetchPost();
   }, []);
 
-  const addItemToHeart = async () => {
+  const addItemToHeart =  () => {
     try{
-      const res = await fetchServer("");
-      console.log();
+      alert('구현에정입니다.')
       
     } catch (e) {
       console.error(e);
     }
-    alert('찜하기 완료');
   }
 
   const clickAddToCartButton = async () => {
@@ -62,22 +63,13 @@ const PostDetail = () => {
 
   const addItemToCart = async () => {
     try{
-      const res = await fetchServer("");
-      console.log();
-      
+      const res = await addCartItem(postId);
+      console.log(res);
+      alert('장바구니에 담았습니다.')
     } catch (e) {
       console.error(e);
     }
   }
-
-  const fetchServer = async (url: string): Promise<Response> => {
-  try {
-    return await fetch(`/api/posts/${postId}`);
-  } catch (e) {
-    console.error(e);
-    throw e;
-  }
-}
 
   const movetoPaymentPage = async () => {
     try {

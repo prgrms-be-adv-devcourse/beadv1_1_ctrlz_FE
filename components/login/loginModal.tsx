@@ -8,9 +8,10 @@ import Link from "next/link";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
 };
 
-const LoginModal = ({ isOpen, onClose }: Props) => {
+const LoginModal = ({ isOpen, onClose, onSuccess }: Props) => {
   // ESC key close
   useEffect(() => {
     if (!isOpen) return;
@@ -54,6 +55,7 @@ const LoginModal = ({ isOpen, onClose }: Props) => {
         <div className="flex flex-col gap-4">
           <Link
             href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/oauth2/authorization/google`}
+            onClick={onSuccess}
           >
             <Button 
               className="w-full"

@@ -10,7 +10,7 @@ import { TProductPageSummaryItem } from '@/types/productPostTypes'
 import { TSearchQueryParams } from '@/types/searches'
 import { TTag } from '@/types/tagTypes';
 import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import ApiPagination from '@/components/search/apiPagination';
 import SearchPagination from '@/components/search/searchPagination';
 import { getSearchedPostResult } from '@/services/getProductPostSummaryList';
@@ -28,6 +28,7 @@ const Search = ({ searchParams }: Props) => {
   const resolvedParams = React.use(searchParams);
 
   const router = useRouter();
+  const pathname = usePathname();
 
   const [searchProductResponseList, setProductResponseList] = useState<TProductPageSummaryItem | null>(null);
 
@@ -76,8 +77,16 @@ const Search = ({ searchParams }: Props) => {
   }, []);
 
   useEffect(() => {
-    // 여기서 검색 API 호출 (fetch)
-    console.log("검색 조건 변경 → 재요청", resolvedParams);
+    const fetchData = async () => {
+      try {
+        const postRes = await getSearchedPostResult(resolvedParams);
+        setProductResponseList(postRes);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  
+    fetchData();
   }, [resolvedParams])
 
   const handleChangeCategory = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -133,16 +142,38 @@ const Search = ({ searchParams }: Props) => {
       return;
     }
 
-    if (selectedCategory) params.set("category", selectedCategory);
+    const selectedCategoryName =
+      category.find(c => String(c.id) === selectedCategory)?.name;
 
-    if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+    if (selectedCategoryName) {
+      params.set("category", selectedCategoryName);
+    }
+
+    if (selectedTags.length > 0) {
+      const tagNames = tags
+        .filter(t => selectedTags.includes(String(t.id)))
+        .map(t => t.name);
+
+      if (tagNames.length > 0) {
+        params.set("tags", tagNames.join(","));
+      }
+    }
 
     if (selectedStatus !== "ALL") params.set("status", selectedStatus);
     if (selectedTradeStatus !== "ALL") params.set("tradeStatus", selectedTradeStatus);
 
     if (sort !== "score") params.set("sort", sort);
 
-    router.push("/search?" + params.toString());
+    const nextUrl = "/search?" + params.toString();
+    const currentUrl = pathname + "?" + new URLSearchParams(resolvedParams as any).toString();
+
+    if (nextUrl === currentUrl) {
+      // 동일 URL이어도 검색 결과를 다시 가져오도록 강제 리프레시
+      router.refresh();
+      return;
+    }
+
+    router.push(nextUrl);
   };
 
   

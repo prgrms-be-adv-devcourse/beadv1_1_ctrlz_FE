@@ -1,15 +1,15 @@
 import { create } from "zustand";
 import { getMyInfo } from "@/services/getMyInfo";
+import { fetchInstance } from "@/services/fetchInstances";
 
 interface AuthStore {
   isLogin: boolean;
   isChecking: boolean;
   checkAuth: () => Promise<void>;
-  login: () => void;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>((set, get) => ({
   // 초기값은 false (서버 확인 전)
   isLogin: false,
   isChecking: true,
@@ -21,20 +21,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
    * - 실패(401/403): 비로그인 상태
    */
   checkAuth: async () => {
+    set({ isChecking: true });
     try {
-      await getMyInfo();
-      set({ isLogin: true, isChecking: false });
-    } catch (error) {
-      set({ isLogin: false, isChecking: false });
+      await getMyInfo(); // fetchInstance가 401 시 자동 refresh + 재시도
+      set({ isLogin: true });
+    } catch {
+      set({ isLogin: false });
+    } finally {
+      set({ isChecking: false });
     }
-  },
-
-  /**
-   * 로그인 성공 시 호출
-   * (쿠키는 서버에서 설정)
-   */
-  login: () => {
-    set({ isLogin: true });
   },
 
   /**
