@@ -8,6 +8,8 @@ import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { getAutoCompleteWordList } from '@/services/getAutoCompleteWordList';
 import { saveKeyWord } from '@/services/saveKeyword';
+import { getTrendPopularKeywordList } from '@/services/getPopularKeywordList';
+import { TAutoCompleteWord } from '@/types/searches';
 
 const SearchInput = () => {
 
@@ -16,7 +18,9 @@ const SearchInput = () => {
   const q = params.get("q") ?? "";
   const [keyword,setKeyword] = useState(q);
 
-  const [autoCompleteResults, setAutoCompleteResults] = useState<string[]>([]);
+  const [autoCompleteResults, setAutoCompleteResults] = useState<TAutoCompleteWord[]>([]);
+  const [popularKeywords, setPopularKeywords] = useState<TAutoCompleteWord[]>([]);
+  const [showPopular, setShowPopular] = useState(false);
   const [isPending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -42,7 +46,10 @@ const SearchInput = () => {
 
     if (!value.trim()) {
       setAutoCompleteResults([]);
+      setShowPopular(true);
       return;
+    } else {
+      setShowPopular(false);
     }
 
     if (inputRef.current) {
@@ -58,9 +65,29 @@ const SearchInput = () => {
       const res = await getAutoCompleteWordList(value);
       console.log(res);
       
-      setAutoCompleteResults(res.data.map(item => item.word));
+      setAutoCompleteResults(res.data);
     } catch(e) {
       console.error(e);
+    }
+  }
+
+  const handleFocus = async () => {
+    if (!keyword.trim()) {
+      if (inputRef.current) {
+        const rect = inputRef.current.getBoundingClientRect();
+        setDropdownStyle({
+          width: rect.width,
+          left: rect.left,
+          top: rect.bottom + 6,
+        });
+      }
+      try {
+        const res = await getTrendPopularKeywordList();
+        setPopularKeywords(res.data);
+        setShowPopular(true);
+      } catch(e) {
+        console.error(e);
+      }
     }
   }
 
@@ -69,6 +96,7 @@ const SearchInput = () => {
 
     await saveKeyWord(value);
     setAutoCompleteResults([]);
+    setShowPopular(false);
 
     // 🔥 조건 초기화: 새로운 URLSearchParams 사용
     const nextSearchParams = new URLSearchParams();
@@ -99,6 +127,7 @@ const SearchInput = () => {
       if (dropdownRef.current?.contains(target)) return;
 
       setAutoCompleteResults([]);
+      setShowPopular(false);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -115,6 +144,7 @@ const SearchInput = () => {
           className='border-[#A57C76] border-2'
           placeholder='검색어를 입력하세요.'
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(e)}
+          onFocus={handleFocus}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault(); // 폼 제출 방지
@@ -123,7 +153,7 @@ const SearchInput = () => {
           }}
           value={keyword}
         />
-        {autoCompleteResults.length > 0 &&
+        {( (autoCompleteResults.length > 0 && !showPopular) || (showPopular && popularKeywords.length > 0) ) &&
           dropdownStyle &&
           typeof window !== "undefined" &&
           createPortal(
@@ -147,18 +177,19 @@ const SearchInput = () => {
                   p-2
                 "
               >
-                {autoCompleteResults.map((item, index) => (
+                {(showPopular ? popularKeywords : autoCompleteResults).map((item, index) => (
                   <li
                     key={index}
                     className="p-2 hover:bg-gray-100 cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation(); // 🔥 바깥 클릭 감지보다 우선 처리
-                      setKeyword(item);
+                      setKeyword(item.word);
                       setAutoCompleteResults([]);
-                      MoveToSearchResult(item); // 🔥 클릭한 키워드로 즉시 이동
+                      setShowPopular(false);
+                      MoveToSearchResult(item.word); // 🔥 클릭한 키워드로 즉시 이동
                     }}
                   >
-                    {item}
+                    {item.word}
                   </li>
                 ))}
               </ul>
