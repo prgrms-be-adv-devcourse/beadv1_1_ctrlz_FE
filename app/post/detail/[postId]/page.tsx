@@ -228,7 +228,7 @@ const PostDetail = () => {
       sellerProducts && (
         <ProductSummaryList
           items={sellerProducts}
-          title={`${post?.nickname}님이 올린 다른 상품`}
+          title={`${post?.nickname || "더미 사용자"}님이 올린 다른 상품`}
         />
       )
      }
