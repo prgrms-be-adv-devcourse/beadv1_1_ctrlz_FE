@@ -22,7 +22,7 @@ import { getSellerProductList, getSimilarProductList } from '@/services/getProdu
 const PostDetail = () => {
   
   const { postId } = useParams<{postId: string}>();
-  const [post, setPost] = useState<TProductPost | null>(null);
+  const [post, setPost] = useState<TProductPost>();
   const [review, setReview] = useState<TReview | null>(null);
   const [similarProducts, setSimilarProducts] = useState<TProductSummaryItem[] | null>(null);
   {/* 함께 본 상품 */}
@@ -43,9 +43,13 @@ const PostDetail = () => {
       setReview(reviewRes.data);
       setSimilarProducts(similarRes.contents);
       setSellerProducts(sellerListRes.contents);
+
+      console.log(`post = ${post}`);
+      
     };
 
     fetchPost();
+
   }, []);
 
   const addItemToHeart =  () => {
@@ -224,7 +228,7 @@ const PostDetail = () => {
       sellerProducts && (
         <ProductSummaryList
           items={sellerProducts}
-          title="판매자가 올린 다른 상품"
+          title={`${post?.nickname}님이 올린 다른 상품`}
         />
       )
      }

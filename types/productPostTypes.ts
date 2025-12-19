@@ -9,7 +9,7 @@ export type ProductPostFormSchema = z.infer<typeof productPostFormSchema>
 //상세
 export type TProductPost = {
   id: string;
-  nickName: string;
+  nickname: string;
   name: string;
   title: string;
   description: string;

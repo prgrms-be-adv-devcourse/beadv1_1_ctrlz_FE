@@ -249,7 +249,7 @@ export const dummyRecommandProductList: TProductSummaryResponse =
 export const dummyProductPostDetail: TProductPostResponse =  {
   "data": {
   id: "post-1",
-  nickName: "유저 닉네임",
+  nickname: "유저 닉네임",
   name: "상품 이름",
   title: "상품 제목",
   description: "상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명상품 설명",
